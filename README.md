@@ -21,3 +21,8 @@ python mixture.py --clean_path ./original/test_clean --noise_path ./original/tes
 2. pcm2wav.py (If you have *.pmc sound file, You can convert to *.wav file from *.pcm file)
    This result is 16bit wav sound file, Therefore, additional resampling, nomalize process may be required.
 python pmc2wav.py --load_path ./pcm_speech --save_path ./wav_speech
+
+
+3. resample.py (sound resample module)
+python resample.py --base_path ./original --save_path ./datasets/speech --save_name clean --os 16000 --ts 16000 --op librosa
+```
