@@ -43,7 +43,7 @@ class data_mixture ():
     """
     def __init__ (self, clean_source_path = "./datasets_original/clean",
                         noise_source_path = "./datasets_original/noise",
-                        save_file_path = "./datasets/",
+                        save_file_path = "./datasets",
                         noisy_name = "test_noisy",
                         clean_name = "test_clean",
                         SNR = np.random.randint(0, 5),
@@ -89,8 +89,8 @@ class data_mixture ():
         self.clean_file_list = walk_filename(self.clean_source_path)
         self.noise_file_list = walk_filename(self.noise_source_path)
 
-        self.clean_file_path = self.save_file_path + self.clean_name
-        self.noisy_file_path = self.save_file_path + self.noisy_name
+        self.clean_file_path = self.save_file_path + "/" + self.clean_name
+        self.noisy_file_path = self.save_file_path + "/" + self.noisy_name
         folder_make(self.clean_file_path)
         folder_make(self.noisy_file_path)
 
@@ -213,7 +213,7 @@ class data_mixture ():
 
     def data_write (self, file_path, sound, sound_name, index):
     
-        scipy.io.wavfile.write(file_path + "/" + str(sound_name) + "{:06d}".format(index+1) + ".wav", 
+        scipy.io.wavfile.write(file_path + "/" + str(sound_name) + "{:08d}".format(index+1) + ".wav", 
                                rate = self.target_sampling,  data = sound)
     
 
@@ -262,12 +262,12 @@ if __name__ == "__main__":
     split_length = args.length
     iteration = args.iter
 
-    if SNR == 0:
+    if  SNR == 0:
         SNR = np.random.randint(0, 5)
     elif SNR == 1:
-        SNR = np.random.randint(-2, 3)
+         SNR = np.random.randint(-2, 3)
     elif SNR == 2:
-        SNR = np.random.randint(-5, 0)
+         SNR = np.random.randint(-5, 0)
 
     resampling_factory = data_mixture(clean_source_path = clean_source_path,
                                       noise_source_path = noise_source_path,

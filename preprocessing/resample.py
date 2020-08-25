@@ -189,7 +189,7 @@ class resampler ():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
-    parser.add_argument("--base_path",    type = str, default = "./original/",      help = "Input original file path")
+    parser.add_argument("--base_path",    type = str, default = "./original",      help = "Input original file path")
     parser.add_argument("--save_path",    type = str, default = "./datasets/clean", help = "Input resampling file path")
     parser.add_argument("--save_name",    type = str, default = "test_clean",       help = "Input resampling file name")
     parser.add_argument("--os", type = int, default = 16000, help = "Input original sound sampling rate")
