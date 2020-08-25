@@ -1,45 +1,44 @@
-import os
-import argparse
-import natsort
-import wave
+import os, argparse
+import wave, natsort
 import numpy as np
+from tqdm import tqdm
 
 import scipy
 import scipy.signal
 import scipy.io.wavfile
 import librosa
 
-from tqdm import tqdm
-# DATASETS FOLDER DIRECTORY
-# ./train
-#       /noisy
-#       /clean
-# ./test
-#       /noisy
-#       /clean
+"""
+Datasets Directory Speech Separation and Enhancement
+    train
+        noisy
+        clean
+    test
+        noisy
+        clean
+"""
 class data_mixture ():
     """
-    Requirements : 동일한 샘플링 레이트로 구성된 음성 파일과 노이즈 파일
+    Requirements : Target Speech, Target Noise
 
-    def __init__    : datasets_source의 test_clean 폴더와 test_noise 폴더에서 음원을 불러온다.
-    def data_split  : Speech 음성을 하나 뽑아 split_length 길이에 맞게 자른다.
-    (반복 횟수는 곧 데이터의 갯수 iteration이 결정)
-    def data_mixing : split clean과 noise를 Loudness normalize를 (-25 dBFS) 하고 SNR 레벨에 맞게 섞는다.
+    def __init__    : Gets the sound source from the test_clean folder and test_noise folder in datasets_source.
+    def data_split  : Pick a Speech and cut it to fit the length of the split_length.
+    (The number of replications will soon be determined by the number of data iteration)
+    def data_mixing : Mix split clean and noise with Loudness normalize (-25 dBFS) and match the SNR level.
         return noisy, clean
-    def data_write  : sound를 저장하는 모듈
+    def data_write  : Module for storing sound
 
     def save
-
-        처리 과정
-        1. speech folder의 모든 파일명을 읽어온다.
-           noise folder의 모든 파일명을 읽어온다.
-        2. speech file name list를 순서대로 하나씩 불러서 split
-        3. split speech를 noise file name list에서 noise를 랜덤으로 하나 고르기
-            random pick noise, random smaple for split_length
-        4. SNR ratio에 맞게 섞기 == return noisy clean
-        5. noisy, clean, noise를 저장
-        ./datasets/ 폴더에 .npy 형태로 저장 (모델의 학습 데이터로 사용)
-        ./datasets/ 폴더에 각 sound 폴더를 만들어서 .wav 파일로 저장
+        Process
+        1. Read all file names of speech folder.
+            Read all file names of noise folder.
+        2. Call the speech file name list one by one and splits
+        3. Choose one noise randomly from the noise file name list.
+            random pick noise, random sample for split_length
+        4. Mixing to SNR ratio == return noisy clean
+        5. Save noisy, clean, noise
+            Save as .npy in ./datasets/ folder (used as learning data for model)
+            Create each sound folder in the ./datasets/ folder.Save as wav file
     """
     def __init__ (self, clean_source_path = "./datasets_original/clean",
                         noise_source_path = "./datasets_original/noise",
@@ -71,7 +70,7 @@ class data_mixture ():
 
             if not(os.path.isdir(folder_path)):
                 os.makedirs(folder_path)
-                print(str(folder_path) + " 폴더 경로 생성 완료")
+                print(str(folder_path) + " Finished creating folder path")
 
 
         self.clean_source_path = clean_source_path
@@ -102,11 +101,11 @@ class data_mixture ():
         for _, data in tqdm(enumerate(self.noise_file_list)):
             sr, sound = scipy.io.wavfile.read(data)
             self.noise_source.append(sound)
-        print("노이즈 소스 메모리 로드 완료")
+        print("Completed loading of noise source memory")
 
         for iteration in range(self.iteration):
             self.clean_source.extend(self.clean_file_list)
-        print("Interation할 음성 소스 리스트 로드 완료")
+        print("Completed loading voice source iteration list")
 
 
     def data_split (self, clean_speech):
@@ -116,17 +115,17 @@ class data_mixture ():
         It's about every voice.
         Padding with 0. for the rest of the voice shorter than this
         
-        음성의 랜덤 인덱스을 뽑고 그 인덱스에서 split length까지의 길이를 자른다.
-        예를 들어 음성의 길이가 48000인데 (인덱스는 [47999])
-        여기서 원하는 스플릿 렝스 16000을 빼면 인덱스는 [47999-16000] = [31999]
-        clean = clean [31999 : 47999] 이런 원리
+        Pull out a random index of the voice and cut the length from that index to the split length.
+        For example, the voice is 48000 long (index is [47999]).
+        If you subtract the desired split lance 16000 here, the index is [47999-16000] = [31999]
+        Clean = Clean [31999 : 4799] This principle
         """
         if len(clean_speech) <= self.split_length:
 
-            # clean_speech가 split_length보다 짧으므로 split_length까지 여분의 길이는 zero padding
+            # Because clean_spech is shorter than split_length, the extra length to split_length is zero padding
             zero_padding = [0 for i in range(len(clean_speech), self.split_length)]
 
-            # split 음성과 나머지 zero padding을 concatenate
+            # convert the split voice and the rest of the zero padding
             result = np.concatenate([clean_speech, zero_padding])
 
             return result
@@ -143,8 +142,8 @@ class data_mixture ():
     def data_mixing (self, clean, noise):
         '''
         argments
-            clean = scipy.io.wavfile.read(음성 파일 리스트 중 하나)
-            nosie = 랜덤으로 고른 노이즈 파일 리스트
+            clean = scipy.io.wavfile.read(One of the list of voice files)
+            nosie = List of randomly selected noise files
 
         Ex)
         noise_source = []
@@ -185,15 +184,15 @@ class data_mixture ():
 
             return noisy, clean
 
-        # 랜덤 SNR
+        # Randomly SNR
         SNR = self.SNR
 
         if len(noise) <= self.split_length:
 
             """
-            랜덤으로 고른 노이즈 길이가 slef.split_length 짧으면,
-            그 길이는 모두 가져오고 추가로 제로패딩을 한다.
-            어차피 제로패딩을 해서라도 음성에 더해야 하기 때문에 새로 다시 인덱싱을 하지 않는다. 
+            If the noise length chosen randomly is short, then the self.split_length,
+            Bring all the length and add zero padding.
+            They don't index again because they have to add to their voice even if they have zero padding anyway.
             """
             zero_padding  = [0 for i in range(len(noise), self.split_length)]
             noise_split = np.concatenate([noise, zero_padding])
@@ -224,26 +223,24 @@ class data_mixture ():
             _, sound = scipy.io.wavfile.read(data)
             split_clean = self.data_split(sound)
 
-            # noise1, noise2, noise3, noise4 ... ... ... 중 노이즈 하나의 인덱스를 획득
             noise_index  = np.random.randint(len(self.noise_source))
-
-            # 노이즈 리스트 중 그 노이즈를 sefl.data_mixing에 인자로 넣는 것
             noisy, clean = self.data_mixing(split_clean, self.noise_source[noise_index])
 
             self.data_write(self.noisy_file_path, noisy, sound_name = self.noisy_name, index = index)
             self.data_write(self.clean_file_path, clean, sound_name = self.clean_name, index = index)
 
-        print("음원 소스를 이용해서 데이터셋 생산 완료")
+        print("Complete dataset production using sound source")
+
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
-    parser.add_argument("--clean_path", type = str, default = "./original/test_clean", help = "Input clean path")
-    parser.add_argument("--noise_path", type = str, default = "./original/test_noise", help = "Input noise path")
-    parser.add_argument("--save_path",  type = str, default = "./datasets",       help = "Input save path")
-    parser.add_argument("--noisy_name", type = str, default = "test_noisy",       help = "Input noisy name")
-    parser.add_argument("--clean_name", type = str, default = "test_clean",       help = "Input clean name")
+    parser.add_argument("--clean_path", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
+    parser.add_argument("--noise_path", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
+    parser.add_argument("--save_path",  type = str, default = "./datasets",    help = "Input save path")
+    parser.add_argument("--noisy_name", type = str, default = "train_noisy",   help = "Input noisy name")
+    parser.add_argument("--clean_name", type = str, default = "train_clean",   help = "Input clean name")
     parser.add_argument("--SNR",    type = int, default = 0,     help = "0 : 0 ~ 5, 1 : -2 ~ 3, 2 : -5 ~ 0")
     parser.add_argument("--os",     type = int, default = 16000, help = "Input original sampling")
     parser.add_argument("--ts",     type = int, default = 16000, help = "Input target sampling")
@@ -262,8 +259,8 @@ if __name__ == "__main__":
     split_length = args.length
     iteration = args.iter
 
-    if  SNR == 0:
-        SNR = np.random.randint(0, 5)
+    if   SNR == 0:
+         SNR = np.random.randint(0, 5)
     elif SNR == 1:
          SNR = np.random.randint(-2, 3)
     elif SNR == 2:

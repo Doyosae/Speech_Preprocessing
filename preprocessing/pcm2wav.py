@@ -1,25 +1,18 @@
-import os
-import argparse
-import natsort
-import wave
+import os, argparse
+import wave, natsort
 import numpy as np
+from tqdm import tqdm
 
 import scipy
 import scipy.signal
 import scipy.io.wavfile
 import librosa
-
-from tqdm import tqdm
-
-
 """
 *.pcm 파일을 *.wav 파일로 변환하는 모듈들
 1. 이 모듈을 이용해서 *.pcm파일을 *.wav 파일로 변환하면 float32가 아닌 int16 형으로 바뀜
 2. 그래서 *.wav 파일을 리로드하면 int16으로 바뀌고 librosa.load(파일 경로, sr = 16000) 옵션을 다시 권장
 3. librosa.load 메서드는 *.wav 파일을 불러와서 동시에 sr = 지정한 값으로 자동 Resampling and Normalize
 """
-
-
 class pcm2wav ():
 
     def __init__ (self, load_path = "./korean_corpus", save_path = "./datasets/clean"):

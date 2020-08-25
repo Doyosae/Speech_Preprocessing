@@ -1,17 +1,12 @@
-import os
-import argparse
-import natsort
-import wave
+import os, argparse
+import wave, natsort
 import numpy as np
+from tqdm import tqdm
 
 import scipy
 import scipy.signal
 import scipy.io.wavfile
 import librosa
-
-from tqdm import tqdm
-
-
 """
 원음의 샘플링 레이트를 파악한다.
 샘플링 레이트를 설정한다. (VoIP 기준 16,000 sampling rate)
@@ -31,8 +26,6 @@ librosa.load를 이용한다. librosa.load("파일 경로", sr = target_sampling
     librosa.load로 normalize, resampling
     "./datasets/*.wav" 형식으로 저장
 """
-
-
 class resampler ():
     '''
     class dataload
@@ -212,5 +205,4 @@ if __name__ == "__main__":
                                    target_sampling = target_sampling)
     
     resampling_factory.data_save(option = option)
-
     print("-- THe END --")
