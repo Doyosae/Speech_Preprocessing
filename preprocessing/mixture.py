@@ -216,8 +216,13 @@ class data_mixture ():
                                rate = self.target_sampling,  data = sound)
     
 
-    def save (self):
-            
+    def save (self, subset_length):
+    
+        if subset_length is None:
+          pass
+        else:
+          self.clean_source = self.clean_source[:subset_length]
+          
         for index, data in tqdm(enumerate(self.clean_source)):
 
             _, sound = scipy.io.wavfile.read(data)
@@ -225,6 +230,9 @@ class data_mixture ():
 
             noise_index  = np.random.randint(len(self.noise_source))
             noisy, clean = self.data_mixing(split_clean, self.noise_source[noise_index])
+            
+            noisy = noisy.astype("float32")
+            clean = clean.astype("float32")
 
             self.data_write(self.noisy_file_path, noisy, sound_name = self.noisy_name, index = index)
             self.data_write(self.clean_file_path, clean, sound_name = self.clean_name, index = index)
@@ -236,29 +244,29 @@ class data_mixture ():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
-    parser.add_argument("--clean_path", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
-    parser.add_argument("--noise_path", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
-    parser.add_argument("--save_path",  type = str, default = "./datasets",    help = "Input save path")
-    parser.add_argument("--noisy_name", type = str, default = "train_noisy",   help = "Input noisy name")
-    parser.add_argument("--clean_name", type = str, default = "train_clean",   help = "Input clean name")
-    parser.add_argument("--SNR",    type = int, default = 0,     help = "0 : 0 ~ 5, 1 : -2 ~ 3, 2 : -5 ~ 0")
+    parser.add_argument("--cp", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
+    parser.add_argument("--np", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
+    parser.add_argument("--sp", type = str, default = "./datasets",    help = "Input save path")
+    parser.add_argument("--nn", type = str, default = "train_noisy",   help = "Input noisy name")
+    parser.add_argument("--cn", type = str, default = "train_clean",   help = "Input clean name")
+    parser.add_argument("--snr",    type = int, default = 0,     help = "0 : 0 ~ 5, 1 : -2 ~ 3, 2 : -5 ~ 0")
     parser.add_argument("--os",     type = int, default = 16000, help = "Input original sampling")
     parser.add_argument("--ts",     type = int, default = 16000, help = "Input target sampling")
     parser.add_argument("--length", type = int, default = 16384, help = "Input split length")
-    parser.add_argument("--iter",   type = int, default = 1,     help = "Input iteration")
+    parser.add_argument("--itera",  type = int, default = 1,     help = "Input iteration")
     args = parser.parse_args()
 
-    clean_source_path = args.clean_path
-    noise_source_path = args.noise_path
-    save_file_path = args.save_path
-    noisy_name = args.noisy_name
-    clean_name = args.clean_name
-    SNR = args.SNR
+    clean_source_path = args.cp
+    noise_source_path = args.np
+    save_file_path    = args.sp
+    noisy_name        = args.nn
+    clean_name        = args.cn
+    SNR               = args.snr
     original_sampling = args.os
-    target_sampling = args.ts
-    split_length = args.length
-    iteration = args.iter
-
+    target_sampling   = args.ts
+    split_length      = args.length
+    iteration         = args.itera
+    
     if   SNR == 0:
          SNR = np.random.randint(0, 5)
     elif SNR == 1:
@@ -277,5 +285,5 @@ if __name__ == "__main__":
                                       split_length = split_length,
                                       iteration = iteration)
 
-    resampling_factory.save()
+    resampling_factory.save(subset_length = None)
     print("-- THe END --")

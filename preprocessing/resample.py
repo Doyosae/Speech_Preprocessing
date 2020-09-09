@@ -182,17 +182,17 @@ class resampler ():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
-    parser.add_argument("--base_path",    type = str, default = "./original",      help = "Input original file path")
-    parser.add_argument("--save_path",    type = str, default = "./datasets/clean", help = "Input resampling file path")
-    parser.add_argument("--save_name",    type = str, default = "test_clean",       help = "Input resampling file name")
+    parser.add_argument("--bp",    type = str, default = "./original",      help = "Input original file path")
+    parser.add_argument("--sp",    type = str, default = "./datasets/clean", help = "Input resampling file path")
+    parser.add_argument("--sn",    type = str, default = "test_clean",       help = "Input resampling file name")
     parser.add_argument("--os", type = int, default = 16000, help = "Input original sound sampling rate")
     parser.add_argument("--ts", type = int, default = 16000, help = "Input targeting sound sampling rate")
     parser.add_argument("--op", type = str, default = "librosa", help = "Input library factory librosa or scipy")
     args = parser.parse_args()
 
-    base_file_path = args.base_path
-    save_file_path = args.save_path
-    save_file_name = args.save_name
+    base_file_path    = args.bp
+    save_file_path    = args.sp
+    save_file_name    = args.sn
     original_sampling = args.os
     target_sampling   = args.ts
     option            = args.op
