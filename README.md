@@ -9,7 +9,7 @@ This tool helps to make speech preprocessing convenient.
 numpy  
 scipy  
 wave  
-librosa 0.7.2  
+librosa 0.7.2 (with numba 0.48.0)
 natsort  
 #
 # Usage  
@@ -26,9 +26,9 @@ python pmc2wav.py --load_path ./pcm_speech --save_path ./wav_speech
   
 2. resample.py (sound resample module)
 ```
-python resample.py --base_path ./original 
-                   --save_path ./datasets/speech 
-                   --save_name clean 
+python resample.py --bp ./original 
+                   --sp ./datasets/speech 
+                   --sn clean 
                    --os 16000 
                    --ts 16000 
                    --op librosa
@@ -38,14 +38,15 @@ python resample.py --base_path ./original
 3. mixture.py (Create Noisy speech file, Noisy = Clean + Noise with SND option)  
    If you just enter the options you want, this tool takes care of everything.  
 ```
-python mixture.py --clean_path ./original/test_clean
-                  --noise_path ./original/test_noise
-                  --save_path ./datasets 
-                  --noisy_name test_noisy 
-                  --clean_name test_clean 
+python mixture.py --cp ./datasets_original/test_clean/
+                  --np ./datasets_original/test_noise/
+                  --sp ./datasets/mainsets
+                  --nn test_noisy 
+                  --cn test_clean 
                   --SNR 1 
                   --os 16000
                   --ts 16000 
                   --length 16384 
                   --iter 1
+                  --sub 100000000
 ```

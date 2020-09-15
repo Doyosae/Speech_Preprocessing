@@ -78,13 +78,14 @@ class pcm2wav ():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'SETTING PATH')
-    parser.add_argument("--lp", type = str, default = "./korean_corpus",  help = "Input load_path (for *.pcm file")
-    parser.add_argument("--sp", type = str, default = "./datasets/clean", help = "Input save_path (for *.wav file")
+    parser.add_argument("--load_path", type = str, default = "./korean_corpus",  help = "Input load_path (for *.pcm file")
+    parser.add_argument("--save_path", type = str, default = "./datasets/clean", help = "Input save_path (for *.wav file")
     args = parser.parse_args()
 
-    load_path = args.lp
-    save_path = args.sp
+    load_path = args.load_path
+    save_path = args.save_path
 
     pcm2wav_factory = pcm2wav(load_path=load_path, save_path=save_path)
     pcm2wav_factory.start()
+    
     print("-- THe END --")

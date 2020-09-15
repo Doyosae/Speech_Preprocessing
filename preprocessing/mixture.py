@@ -88,8 +88,8 @@ class data_mixture ():
         self.clean_file_list = walk_filename(self.clean_source_path)
         self.noise_file_list = walk_filename(self.noise_source_path)
 
-        self.clean_file_path = self.save_file_path + "/" + self.clean_name
-        self.noisy_file_path = self.save_file_path + "/" + self.noisy_name
+        self.clean_file_path = self.save_file_path + "/" + self.clean_name + "/"
+        self.noisy_file_path = self.save_file_path + "/" + self.noisy_name + "/"
         folder_make(self.clean_file_path)
         folder_make(self.noisy_file_path)
 
@@ -210,9 +210,9 @@ class data_mixture ():
         return noisy_result, clean_result
     
 
-    def data_write (self, file_path, sound, sound_name, index):
+    def data_write (self, file_path, sound, index):
     
-        scipy.io.wavfile.write(file_path + "/" + str(sound_name) + "{:08d}".format(index+1) + ".wav", 
+        scipy.io.wavfile.write(file_path + "{:08d}".format(index+1) + ".wav", 
                                rate = self.target_sampling,  data = sound)
     
 
@@ -227,15 +227,14 @@ class data_mixture ():
 
             _, sound = scipy.io.wavfile.read(data)
             split_clean = self.data_split(sound)
-
             noise_index  = np.random.randint(len(self.noise_source))
             noisy, clean = self.data_mixing(split_clean, self.noise_source[noise_index])
             
             noisy = noisy.astype("float32")
             clean = clean.astype("float32")
 
-            self.data_write(self.noisy_file_path, noisy, sound_name = self.noisy_name, index = index)
-            self.data_write(self.clean_file_path, clean, sound_name = self.clean_name, index = index)
+            self.data_write(self.noisy_file_path, noisy, index = index)
+            self.data_write(self.clean_file_path, clean, index = index)
 
         print("Complete dataset production using sound source")
 
@@ -246,14 +245,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
     parser.add_argument("--cp", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
     parser.add_argument("--np", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
-    parser.add_argument("--sp", type = str, default = "./datasets",    help = "Input save path")
+    parser.add_argument("--sp", type = str, default = "./datasets/short",    help = "Input save path")
     parser.add_argument("--nn", type = str, default = "train_noisy",   help = "Input noisy name")
     parser.add_argument("--cn", type = str, default = "train_clean",   help = "Input clean name")
-    parser.add_argument("--snr",    type = int, default = 0,     help = "0 : 0 ~ 5, 1 : -2 ~ 3, 2 : -5 ~ 0")
-    parser.add_argument("--os",     type = int, default = 16000, help = "Input original sampling")
-    parser.add_argument("--ts",     type = int, default = 16000, help = "Input target sampling")
-    parser.add_argument("--length", type = int, default = 16384, help = "Input split length")
-    parser.add_argument("--itera",  type = int, default = 1,     help = "Input iteration")
+    parser.add_argument("--snr",    type = int, default = 0,      help = "0 : 0 ~ 5, 1 : -2 ~ 3, 2 : -5 ~ 0")
+    parser.add_argument("--os",     type = int, default = 16000,  help = "Input original sampling")
+    parser.add_argument("--ts",     type = int, default = 16000,  help = "Input target sampling")
+    parser.add_argument("--length", type = int, default = 16384,  help = "Input split length")
+    parser.add_argument("--itera",  type = int, default = 1,      help = "Input iteration")
+    parser.add_argument("--sub",    type = int, default = 100000, help = "Input sub slice")
     args = parser.parse_args()
 
     clean_source_path = args.cp
@@ -266,6 +266,7 @@ if __name__ == "__main__":
     target_sampling   = args.ts
     split_length      = args.length
     iteration         = args.itera
+    subset_length     = args.sub
     
     if   SNR == 0:
          SNR = np.random.randint(0, 5)
@@ -285,5 +286,5 @@ if __name__ == "__main__":
                                       split_length = split_length,
                                       iteration = iteration)
 
-    resampling_factory.save(subset_length = None)
+    resampling_factory.save(subset_length = subset_length)
     print("-- THe END --")
