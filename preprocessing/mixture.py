@@ -42,17 +42,16 @@ class data_mixture ():
     """
     def __init__ (self, clean_source_path = "./datasets_original/clean",
                         noise_source_path = "./datasets_original/noise",
-                        save_file_path = "./datasets",
-                        noisy_name = "test_noisy",
-                        clean_name = "test_clean",
-                        SNR = np.random.randint(0, 5),
+                        save_file_path    = "./datasets",
+                        noisy_name        = "test_noisy",
+                        clean_name        = "test_clean",
+                        SNR               = np.random.randint(0, 5),
                         original_sampling = 16000,
-                        target_sampling = 16000,
-                        split_length = 16384,
-                        iteration = 1):
+                        target_sampling   = 16000,
+                        split_length      = 16384,
+                        iteration         = 1):
 
         def walk_filename (file_path):
-
             file_list = []
 
             for root, dirs, files in tqdm(os.walk(file_path)):
@@ -67,23 +66,21 @@ class data_mixture ():
             return file_list
 
         def folder_make(folder_path):
-
             if not(os.path.isdir(folder_path)):
                 os.makedirs(folder_path)
                 print(str(folder_path) + " Finished creating folder path")
 
-
         self.clean_source_path = clean_source_path
         self.noise_source_path = noise_source_path
-        self.save_file_path = save_file_path
-        self.noisy_name = noisy_name
-        self.clean_name = clean_name
+        self.save_file_path    = save_file_path
+        self.noisy_name        = noisy_name
+        self.clean_name        = clean_name
 
-        self.SNR = SNR
+        self.SNR               = SNR
         self.original_sampling = original_sampling
-        self.target_sampling = target_sampling
-        self.split_length = split_length
-        self.iteration = iteration
+        self.target_sampling   = target_sampling
+        self.split_length      = split_length
+        self.iteration         = iteration
 
         self.clean_file_list = walk_filename(self.clean_source_path)
         self.noise_file_list = walk_filename(self.noise_source_path)
@@ -107,7 +104,6 @@ class data_mixture ():
             self.clean_source.extend(self.clean_file_list)
         print("Completed loading voice source iteration list")
 
-
     def data_split (self, clean_speech):
         """
         Cut as much as you want from the voice file.
@@ -121,23 +117,18 @@ class data_mixture ():
         Clean = Clean [31999 : 4799] This principle
         """
         if len(clean_speech) <= self.split_length:
-
             # Because clean_spech is shorter than split_length, the extra length to split_length is zero padding
             zero_padding = [0 for i in range(len(clean_speech), self.split_length)]
-
             # convert the split voice and the rest of the zero padding
             result = np.concatenate([clean_speech, zero_padding])
 
             return result
 
-
         elif len(clean_speech) > self.split_length:
-
             random_point = np.random.randint(len(clean_speech) - self.split_length)
             result = clean_speech[random_point : random_point + self.split_length]
 
             return result
-
 
     def data_mixing (self, clean, noise):
         '''
@@ -163,7 +154,6 @@ class data_mixture ():
             scipy.io.wavfile.write(noisy path)
             scipy.io.wavfile.write(noisy path)
         '''
-
         def SNR_calcaulator (SNR, clean, noise):
             """
             Calculate the scale of noise to create the desired SNR
@@ -176,59 +166,48 @@ class data_mixture ():
             scalar_clean = 10 ** (-25 / 20) / rms_clean
             scalar_noise = 10 ** (-25 / 20) / rms_noise
             
-            clean = clean * scalar_clean
-            noise = noise * scalar_noise
+            clean        = clean * scalar_clean
+            noise        = noise * scalar_noise
 
             noise_scalar = np.sqrt((rms_clean / rms_noise / (10**(SNR/20))))
-            noisy = clean + (noise_scalar * noise)
+            noisy        = clean + (noise_scalar * noise)
 
             return noisy, clean
-
         # Randomly SNR
         SNR = self.SNR
 
         if len(noise) <= self.split_length:
-
             """
             If the noise length chosen randomly is short, then the self.split_length,
             Bring all the length and add zero padding.
             They don't index again because they have to add to their voice even if they have zero padding anyway.
             """
-            zero_padding  = [0 for i in range(len(noise), self.split_length)]
-            noise_split = np.concatenate([noise, zero_padding])
-
+            zero_padding               = [0 for i in range(len(noise), self.split_length)]
+            noise_split                = np.concatenate([noise, zero_padding])
             noisy_result, clean_result = SNR_calcaulator(SNR, clean, noise_split)
 
 
         elif len(noise) > self.split_length:
-
             noise_point = np.random.randint(len(noise) - self.split_length)
             noise_split = noise[noise_point : noise_point + self.split_length]
-
             noisy_result, clean_result = SNR_calcaulator(SNR, clean, noise_split)
 
         return noisy_result, clean_result
-    
 
     def data_write (self, file_path, sound, index):
-    
-        scipy.io.wavfile.write(file_path + "{:08d}".format(index+1) + ".wav", 
-                               rate = self.target_sampling,  data = sound)
-    
+        scipy.io.wavfile.write(file_path + "{:08d}".format(index+1) + ".wav", rate = self.target_sampling,  data = sound)
 
     def save (self, subset_length):
-    
         if subset_length is None:
-          pass
+            pass
         else:
-          self.clean_source = self.clean_source[:subset_length]
+            self.clean_source = self.clean_source[:subset_length]
           
         for index, data in tqdm(enumerate(self.clean_source)):
-
-            _, sound = scipy.io.wavfile.read(data)
-            split_clean = self.data_split(sound)
-            noise_index  = np.random.randint(len(self.noise_source))
-            noisy, clean = self.data_mixing(split_clean, self.noise_source[noise_index])
+            _, sound        = scipy.io.wavfile.read(data)
+            split_clean     = self.data_split(sound)
+            noise_index     = np.random.randint(len(self.noise_source))
+            noisy, clean    = self.data_mixing(split_clean, self.noise_source[noise_index])
             
             noisy = noisy.astype("float32")
             clean = clean.astype("float32")
@@ -241,7 +220,6 @@ class data_mixture ():
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
     parser.add_argument("--cp", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
     parser.add_argument("--np", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
