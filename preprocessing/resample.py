@@ -61,14 +61,13 @@ class resampler ():
                         save_file_name    = "test_clean",
                         original_sampling = 16000,
                         target_sampling   = 16000):
-    
+
         def walk_filename (file_path):
             file_list = []
-            
+
             for root, dirs, files in tqdm(os.walk(file_path)):
                 for fname in files:
-                    if fname == "desktop.ini" or fname == ".DS_Store": 
-                        continue 
+                    if fname == "desktop.ini" or fname == ".DS_Store": continue 
                     full_fname = os.path.join(root, fname)
                     file_list.append(full_fname)
 
@@ -82,13 +81,14 @@ class resampler ():
         self.file_list         = walk_filename(self.file_path)
 
         # "./datasets/test_clean"
-        self.save_file_path = save_file_path + "/" + save_file_name
+        self.save_file_path    = save_file_path + "/" + save_file_name
 
         # Check save_file_path -> create folder
         print("Check folder path ::: ", self.save_file_path)
         if not(os.path.isdir(self.save_file_path)): 
             os.makedirs(self.save_file_path)
         
+
     def load_librosa (self):
         """
         librosa_load (wav file to numpy array with normalize, resampling)
@@ -100,6 +100,7 @@ class resampler ():
         for index, data in tqdm(enumerate (self.file_list)):
             sound, sampling_rate = librosa.load(data, sr = self.target_sampling)
             librosa.output.write_wav(self.save_file_path + "/" + "{:07d}".format(index+1) + ".wav", sound, self.target_sampling)
+        
 
     def load_scipy (self, path):
         """
@@ -114,6 +115,7 @@ class resampler ():
         sr, sound = scipy.io.wavfile.read(path)
         
         return sound
+    
 
     def data_normalize (self, data):
         """
@@ -123,28 +125,34 @@ class resampler ():
         data = data / ((2**16) - 1)
         data = 2 * data
         data = data - 1
+
         return data
+    
     
     def data_resampler (self, data):
         """
         original sampling rate to target sampling rate
         """
         data = librosa.resample(data, orig_sr = original_sampling, target_sr = self.target_sampling)
+        
         return data
+
 
     def data_convert2float32 (self, data):
         """
         datatype convert to float32
         """
         data = data.astype(np.float32)
+
         return data
 
+
     def save_scipy (self, data):
-        scipy.io.wavfile.write(self.save_file_path, rate = self.target_sampling, data = data)
+        scipy.io.wavfile.write(self.save_file_path, sr = self.target_sampling, data = data)
+
 
     def data_save (self, option = "librosa"):
         print("Option is ", option)
-
         if option == "librosa": 
             self.load_librosa()
 
@@ -155,6 +163,7 @@ class resampler ():
                 sound = self.data_resampler(sound)
                 sound = self.data_convert2float32(sound)
                 self.save_scipy(sound)
+
         else: raise "option을 librosa나 scipy 둘 중 하나로 입력하세요."
 
 
