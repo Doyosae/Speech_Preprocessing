@@ -8,17 +8,16 @@ import scipy.signal
 import scipy.io.wavfile
 import librosa
 
-"""
-Datasets Directory Speech Separation and Enhancement
-    train
-        noisy
-        clean
-    test
-        noisy
-        clean
-"""
 class data_mixture ():
     """
+    Datasets Directory Speech Separation and Enhancement
+        train
+            noisy
+            clean
+        test
+            noisy
+            clean
+
     Requirements : Target Speech, Target Noise
 
     def __init__    : Gets the sound source from the test_clean folder and test_noise folder in datasets_source.
@@ -50,7 +49,19 @@ class data_mixture ():
                         target_sampling   = 16000,
                         split_length      = 16384,
                         iteration         = 1):
-
+        '''
+        arguments:
+            clean_source_path: original clean path
+            noise_source_path: original noise path
+            save_file_path   : save file path for mixture(noisy) and target(clean)
+            noisy_name       : filename of mixture(noisy)
+            clean_name       : filenmae of target(clean)
+            SNR              : ratio of signal and noise
+            original_sampling : sampling rate of original sound
+            target_sampling   : sampling rate of synthesized sound
+            split_length      : cutting size of synthesized sound
+            iteration         : iteration of total process
+        '''
         def walk_filename (file_path):
             file_list = []
 
@@ -60,7 +71,6 @@ class data_mixture ():
                         continue 
                     full_fname = os.path.join(root, fname)
                     file_list.append(full_fname)
-
             file_list = natsort.natsorted(file_list, reverse = False)
             
             return file_list
@@ -70,25 +80,26 @@ class data_mixture ():
                 os.makedirs(folder_path)
                 print(str(folder_path) + " Finished creating folder path")
 
+
         self.clean_source_path = clean_source_path
         self.noise_source_path = noise_source_path
         self.save_file_path    = save_file_path
         self.noisy_name        = noisy_name
         self.clean_name        = clean_name
 
-        self.SNR               = SNR
+        self.SNR = SNR
         self.original_sampling = original_sampling
         self.target_sampling   = target_sampling
         self.split_length      = split_length
         self.iteration         = iteration
 
-        self.clean_file_list = walk_filename(self.clean_source_path)
-        self.noise_file_list = walk_filename(self.noise_source_path)
+        self.clean_file_list   = walk_filename(self.clean_source_path)
+        self.noise_file_list   = walk_filename(self.noise_source_path)
 
-        self.clean_file_path = self.save_file_path + "/" + self.clean_name + "/"
-        self.noisy_file_path = self.save_file_path + "/" + self.noisy_name + "/"
-        folder_make(self.clean_file_path)
+        self.noisy_file_path   = self.save_file_path + "/" + self.noisy_name + "/"
+        self.clean_file_path   = self.save_file_path + "/" + self.clean_name + "/"
         folder_make(self.noisy_file_path)
+        folder_make(self.clean_file_path)
 
 
         'Load noise_source_sound, clean_source_file'
@@ -103,6 +114,7 @@ class data_mixture ():
         for iteration in range(self.iteration):
             self.clean_source.extend(self.clean_file_list)
         print("Completed loading voice source iteration list")
+
 
     def data_split (self, clean_speech):
         """
@@ -120,15 +132,16 @@ class data_mixture ():
             # Because clean_spech is shorter than split_length, the extra length to split_length is zero padding
             zero_padding = [0 for i in range(len(clean_speech), self.split_length)]
             # convert the split voice and the rest of the zero padding
-            result = np.concatenate([clean_speech, zero_padding])
+            result       = np.concatenate([clean_speech, zero_padding])
 
             return result
 
         elif len(clean_speech) > self.split_length:
             random_point = np.random.randint(len(clean_speech) - self.split_length)
-            result = clean_speech[random_point : random_point + self.split_length]
+            result       = clean_speech[random_point : random_point + self.split_length]
 
             return result
+
 
     def data_mixing (self, clean, noise):
         '''
@@ -154,6 +167,7 @@ class data_mixture ():
             scipy.io.wavfile.write(noisy path)
             scipy.io.wavfile.write(noisy path)
         '''
+
         def SNR_calcaulator (SNR, clean, noise):
             """
             Calculate the scale of noise to create the desired SNR
@@ -165,14 +179,13 @@ class data_mixture ():
             # Normalize sound
             scalar_clean = 10 ** (-25 / 20) / rms_clean
             scalar_noise = 10 ** (-25 / 20) / rms_noise
-            
             clean        = clean * scalar_clean
             noise        = noise * scalar_noise
-
             noise_scalar = np.sqrt((rms_clean / rms_noise / (10**(SNR/20))))
             noisy        = clean + (noise_scalar * noise)
 
             return noisy, clean
+
         # Randomly SNR
         SNR = self.SNR
 
@@ -186,40 +199,43 @@ class data_mixture ():
             noise_split                = np.concatenate([noise, zero_padding])
             noisy_result, clean_result = SNR_calcaulator(SNR, clean, noise_split)
 
-
         elif len(noise) > self.split_length:
-            noise_point = np.random.randint(len(noise) - self.split_length)
-            noise_split = noise[noise_point : noise_point + self.split_length]
+            noise_point                = np.random.randint(len(noise) - self.split_length)
+            noise_split                = noise[noise_point : noise_point + self.split_length]
             noisy_result, clean_result = SNR_calcaulator(SNR, clean, noise_split)
 
         return noisy_result, clean_result
+    
 
     def data_write (self, file_path, sound, index):
         scipy.io.wavfile.write(file_path + "{:08d}".format(index+1) + ".wav", rate = self.target_sampling,  data = sound)
+    
 
     def save (self, subset_length):
         if subset_length is None:
-            pass
+          pass
         else:
-            self.clean_source = self.clean_source[:subset_length]
+          self.clean_source = self.clean_source[:subset_length]
           
         for index, data in tqdm(enumerate(self.clean_source)):
-            _, sound        = scipy.io.wavfile.read(data)
-            split_clean     = self.data_split(sound)
-            noise_index     = np.random.randint(len(self.noise_source))
-            noisy, clean    = self.data_mixing(split_clean, self.noise_source[noise_index])
+            _, sound     = scipy.io.wavfile.read(data)
+            split_clean  = self.data_split(sound)
+            noise_index  = np.random.randint(len(self.noise_source))
+            noisy, clean = self.data_mixing(split_clean, self.noise_source[noise_index])
             
             noisy = noisy.astype("float32")
             clean = clean.astype("float32")
+            # noise = noisy - clean
 
             self.data_write(self.noisy_file_path, noisy, index = index)
             self.data_write(self.clean_file_path, clean, index = index)
+            # self.data_write(self.save_file_path + "/noise/", noise, index)
 
         print("Complete dataset production using sound source")
 
 
-
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description = 'SETTING OPTION')
     parser.add_argument("--cp", type = str, default = "./datasets_original/train_clean", help = "Input clean path")
     parser.add_argument("--np", type = str, default = "./datasets_original/train_noise", help = "Input noise path")
@@ -252,17 +268,19 @@ if __name__ == "__main__":
          SNR = np.random.randint(-2, 3)
     elif SNR == 2:
          SNR = np.random.randint(-5, 0)
+    elif SNR == -1:
+         SNR = 0
 
     resampling_factory = data_mixture(clean_source_path = clean_source_path,
                                       noise_source_path = noise_source_path,
-                                      save_file_path = save_file_path,
-                                      noisy_name = noisy_name,
-                                      clean_name = clean_name,
-                                      SNR = SNR,
+                                      save_file_path    = save_file_path,
+                                      noisy_name        = noisy_name,
+                                      clean_name        = clean_name,
+                                      SNR               = SNR,
                                       original_sampling = original_sampling,
-                                      target_sampling = target_sampling,
-                                      split_length = split_length,
-                                      iteration = iteration)
+                                      target_sampling   = target_sampling,
+                                      split_length      = split_length,
+                                      iteration         = iteration)
 
     resampling_factory.save(subset_length = subset_length)
     print("-- THe END --")
