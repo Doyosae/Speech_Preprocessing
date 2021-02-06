@@ -9,7 +9,7 @@ This tool helps to make speech preprocessing convenient.
 numpy  
 scipy  
 wave  
-librosa 0.7.2
+librosa 0.7.2  
 numba 0.48.0  
 natsort  
 #
