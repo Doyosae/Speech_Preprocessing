@@ -6,12 +6,14 @@ This tool helps to make speech preprocessing convenient.
 - Creating noisy speech using clean speech and noise. (You can set the SNR level you want!)  
 #
 # Requirements  
+```
 numpy  
 scipy  
 wave  
 librosa 0.7.2  
 numba 0.48.0  
 natsort  
+```
 #
 # Usage  
 You must to have clean speech folder and noise sound folder with path.  
